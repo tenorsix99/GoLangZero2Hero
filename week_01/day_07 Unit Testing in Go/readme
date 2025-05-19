@@ -1,0 +1,39 @@
+; // Part 1: Unit Testing in Go
+; เขียนไฟล์ xxx_test.go
+
+
+; // Part 2: Go Modules
+; // ✅ เริ่มต้น Project ใหม่
+; go mod init github.com/yourname/yourproject
+; // Exmple : go mod init github.com/goZeroToHero/day07  
+
+; - สร้างไฟล์ go.mod ขึ้นมา
+; - เก็บชื่อ module และ dependency
+
+; // ✅ การดึง dependency อัตโนมัติ
+; // ถ้า import package ข้างนอก เช่น: github.com/stretchr/testify   
+; // แล้วสั่ง:
+; go get github.com/stretchr/testify
+; // ระบบจะเพิ่ม dependency เข้าไปใน go.mod และ go.sum ทันที
+
+; // ✅ ใช้งาน dependency ได้เลย
+; // import (
+; //  ...	
+; // 	"github.com/stretchr/testify/assert"
+; // )
+
+
+; // Step-by-Step
+
+; // ลำดับ	 | คำสั่ง											|	หมายเหตุ
+; // 1		| go mod init github.com/yourname/projectname 	 | ตั้ง project
+; // 2		| go get github.com/xxxxx/xxxx					 | ดึง dependency
+; // 3		| import ในไฟล์ .go								  | ใช้งานได้ทันที
+; // 4		| go test / go run main.go						 | ทดสอบโปรแกรม
+; // 5		| go mod tidy								 	 | จัดระเบียบ module
+
+; // 🎯 ตัวอย่าง Dependency น่าเอามาฝึก
+; // Package 							| ใช้ทำอะไร 						| Install
+; // github.com/stretchr/testify 		| ง่ายมาก สำหรับทำ unit test 		 | go get github.com/stretchr/testify
+; // github.com/google/uuid 			| สร้าง UUID 						| go get github.com/google/uuid
+; // golang.org/x/crypto/bcrypt 		| Encrypt password 				   | go get golang.org/x/crypto/bcrypt

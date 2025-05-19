@@ -1,0 +1,76 @@
+; 🎯 สิ่งที่คุณจะได้เรียนรู้
+; 1. การจัดการ error แบบ Go (if err != nil)
+; 2. การสร้าง custom error
+; 3. การ wrap error ด้วย fmt.Errorf และ errors.Join
+; 4. เทคนิคการส่ง error กลับจากหลาย layer
+; 5. การใช้ sentinel error
+
+; ✅ หลักการตรวจจับและ log error ที่ดี (Best Practices)
+
+🔹 1. ใช้ fmt.Errorf("%w", err) เพื่อ wrap context เพิ่มเติม
+
+; return fmt.Errorf("call API X failed: %w", err)
+
+; จะช่วยให้ trace ย้อนไปถึง error ดั้งเดิมได้ด้วย errors.Is หรือ errors.Unwrap
+
+🔹 2. ใส่รายละเอียดเพียงพอใน log เช่น:
+; URL ที่เรียก
+; HTTP Status
+; Response Body (บางส่วน)
+; Retry count
+; Time used
+; Trace ID / Request ID
+
+; log.WithFields(log.Fields{
+; 	"url": url,
+; 	"status": resp.StatusCode,
+; 	"duration_ms": duration.Milliseconds(),
+; 	"trace_id": traceID,
+; }).Warnf("API call failed: %v", err)
+
+🔹 3. อย่า log error ซ้ำหลายจุด
+; Logging ควรทำเฉพาะชั้นที่ รับผิดชอบสุดท้ายกับผู้ใช้ (เช่น controller หรือ handler)
+; ส่วน logic ชั้นล่างควร wrap error แล้วโยนขึ้นไปเฉย ๆ
+
+; // ไม่ควร log ซ้ำซ้อนในทุกชั้น
+; func callService() error {
+; 	resp, err := http.Get("...")
+; 	if err != nil {
+; 		return fmt.Errorf("error calling service: %w", err)
+; 	}
+; 	// ...
+; 	return nil
+; }
+
+🔹 4. แยกระดับ log ที่ชัดเจน
+; | log level | ใช้เมื่อ                                         |
+; | --------- | ------------------------------------------------ |
+; | `Info`    | ทุกอย่างทำงานปกติ                                |
+; | `Warn`    | มีอะไรผิดปกติเล็กน้อย เช่น retry ได้             |
+; | `Error`   | มีปัญหาในระบบ แต่ไม่ทำให้ตาย                     |
+; | `Fatal`   | ระบบพัง ควรออกทันที (ไม่แนะนำใช้ใน HTTP handler) |
+
+
+🔹 5. ใส่ request context/trace ID ในทุก log
+; ctx := context.WithValue(r.Context(), "trace_id", "abc-123")
+; และใน log:
+; log.WithField("trace_id", ctx.Value("trace_id")).Error("API failed")
+
+🛠 ตัวอย่าง Middleware ใส่ Trace ID
+; func withTraceID(next http.Handler) http.Handler {
+; 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+; 		traceID := uuid.NewString()
+; 		ctx := context.WithValue(r.Context(), "trace_id", traceID)
+; 		log.WithField("trace_id", traceID).Info("🔍 Incoming request")
+
+; 		next.ServeHTTP(w, r.WithContext(ctx))
+; 	})
+; }
+
+✅ สรุป Checklist การ log error จาก API
+ ใส่รายละเอียด context (URL, status, timing, traceID)
+ ใช้ %w สำหรับ error wrapping
+ แยกระดับ log ตามความรุนแรง
+ ไม่ log ซ้ำในหลาย layer
+ ใส่ request ID เพื่อ trace logs ข้าม service
+ ใช้ structured logger (เช่น logrus, zerolog, slog)
